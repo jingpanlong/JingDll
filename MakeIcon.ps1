@@ -1,0 +1,27 @@
+Add-Type -AssemblyName System.Drawing
+$bitmap = [Drawing.Bitmap]::new(256,256)
+$graphics = [Drawing.Graphics]::FromImage($bitmap)
+$graphics.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
+$graphics.Clear([Drawing.Color]::Transparent)
+$path = [Drawing.Drawing2D.GraphicsPath]::new()
+$path.AddArc(4,4,64,64,180,90)
+$path.AddArc(188,4,64,64,270,90)
+$path.AddArc(188,188,64,64,0,90)
+$path.AddArc(4,188,64,64,90,90)
+$path.CloseFigure()
+$brush = [Drawing.Drawing2D.LinearGradientBrush]::new([Drawing.Point]::new(0,0),[Drawing.Point]::new(256,256),[Drawing.Color]::FromArgb(53,117,255),[Drawing.Color]::FromArgb(24,66,171))
+$graphics.FillPath($brush,$path)
+$font = [Drawing.Font]::new('Segoe UI',145,[Drawing.FontStyle]::Bold,[Drawing.GraphicsUnit]::Pixel)
+$format = [Drawing.StringFormat]::new()
+$format.Alignment = [Drawing.StringAlignment]::Center
+$format.LineAlignment = [Drawing.StringAlignment]::Center
+$graphics.DrawString('J',$font,[Drawing.Brushes]::White,[Drawing.RectangleF]::new(0,-6,256,256),$format)
+$stream = [IO.MemoryStream]::new()
+$bitmap.Save($stream,[Drawing.Imaging.ImageFormat]::Png)
+$png = $stream.ToArray()
+$file = [IO.File]::Create((Join-Path $PSScriptRoot 'logo.ico'))
+$writer = [IO.BinaryWriter]::new($file)
+$writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]1)
+$writer.Write([byte]0); $writer.Write([byte]0); $writer.Write([byte]0); $writer.Write([byte]0)
+$writer.Write([uint16]1); $writer.Write([uint16]32); $writer.Write([uint32]$png.Length); $writer.Write([uint32]22); $writer.Write($png)
+$writer.Dispose(); $stream.Dispose(); $graphics.Dispose(); $bitmap.Dispose(); $path.Dispose(); $brush.Dispose(); $font.Dispose(); $format.Dispose()
